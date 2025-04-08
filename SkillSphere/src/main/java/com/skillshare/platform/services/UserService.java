@@ -46,4 +46,8 @@ public interface UserService {
     void  disable2FA(Long userId);
 
     Optional<User> findById(Long userId);
+
+    UserDTO getPublicProfile(Long userId, Long authenticatedUserId);
+
+    List<UserDTO> getAllPublicProfiles(Long authenticatedUserId);
 }

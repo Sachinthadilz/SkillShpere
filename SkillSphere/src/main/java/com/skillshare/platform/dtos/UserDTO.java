@@ -31,4 +31,5 @@ public class UserDTO {
     private String profilePicture;
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
+    private boolean isFollowed;
 }
