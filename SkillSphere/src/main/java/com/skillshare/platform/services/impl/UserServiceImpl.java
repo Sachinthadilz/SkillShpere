@@ -2,6 +2,7 @@ package com.skillshare.platform.services.impl;
 
 import com.skillshare.platform.dtos.UserDTO;
 import com.skillshare.platform.models.PasswordResetToken;
+import com.skillshare.platform.repositories.FollowerRepository;
 import com.skillshare.platform.repositories.PasswordResetTokenRepository;
 import com.skillshare.platform.repositories.RoleRepository;
 import com.skillshare.platform.repositories.UserRepository;
@@ -22,6 +23,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -37,6 +39,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     RoleRepository roleRepository;
+
+    @Autowired
+    FollowerRepository followerRepository;
 
     @Autowired
     PasswordResetTokenRepository passwordResetTokenRepository;
@@ -94,7 +99,8 @@ public class UserServiceImpl implements UserService {
                 user.getBio(),
                 user.getProfilePicture(),
                 user.getCreatedDate(),
-                user.getUpdatedDate()
+                user.getUpdatedDate(),
+                false
         );
     }
 
@@ -228,5 +234,56 @@ public class UserServiceImpl implements UserService {
         user.setTwoFactorEnabled(false);
         userRepository.save(user);
     }
+
+
+    @Override
+    public UserDTO getPublicProfile(Long userId, Long authenticatedUserId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        UserDTO dto = new UserDTO();
+        dto.setUserId(user.getUserId());
+        dto.setUserName(user.getUserName());
+        dto.setBio(user.getBio());
+        // Leave other fields null or default to exclude them from public view
+
+        if (authenticatedUserId != null) {
+            User followerUser = userRepository.findById(authenticatedUserId)
+                    .orElse(null);
+            dto.setFollowed(followerUser != null &&
+                    followerRepository.existsByUserAndFollowerUser(user, followerUser));
+        } else {
+            dto.setFollowed(false);
+        }
+
+        return dto;
+    }
+
+    @Override
+    public List<UserDTO> getAllPublicProfiles(Long authenticatedUserId) {
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(user -> {
+                    UserDTO dto = new UserDTO();
+                    dto.setUserId(user.getUserId());
+                    dto.setUserName(user.getUserName());
+                    dto.setBio(user.getBio());
+                    // Leave other fields null or default for public view
+
+                    if (authenticatedUserId != null) {
+                        User followerUser = userRepository.findById(authenticatedUserId)
+                                .orElse(null);
+                        dto.setFollowed(followerUser != null &&
+                                followerRepository.existsByUserAndFollowerUser(user, followerUser));
+                    } else {
+                        dto.setFollowed(false);
+                    }
+
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+
 
 }

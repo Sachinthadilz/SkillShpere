@@ -1,8 +1,11 @@
 package com.skillshare.platform.controllers;
 
+import com.skillshare.platform.dtos.UserDTO;
 import com.skillshare.platform.models.AppRole;
+import com.skillshare.platform.models.Follower;
 import com.skillshare.platform.models.Role;
 import com.skillshare.platform.models.User;
+import com.skillshare.platform.repositories.FollowerRepository;
 import com.skillshare.platform.repositories.RoleRepository;
 import com.skillshare.platform.repositories.UserRepository;
 import com.skillshare.platform.security.jwt.JwtUtils;
@@ -14,6 +17,7 @@ import com.skillshare.platform.security.response.UserInfoResponse;
 import com.skillshare.platform.security.services.UserDetailsImpl;
 import com.skillshare.platform.services.TotpService;
 import com.skillshare.platform.services.UserService;
+import com.skillshare.platform.services.FollowerService;
 import com.skillshare.platform.util.AuthUtil;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 import jakarta.validation.Valid;
@@ -26,7 +30,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,6 +62,9 @@ public class AuthController {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    FollowerService followerService;
 
     @Autowired
     AuthUtil authUtil;
@@ -259,7 +265,152 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/follow/{userId}")
+    public ResponseEntity<?> followUser(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("User must be authenticated to follow"));
+        }
+        Long followerUserId = userDetails.getId(); // Assuming UserDetailsImpl has getId()
+        try {
+            Follower follower = followerService.followUser(userId, followerUserId);
+            return ResponseEntity.ok(new MessageResponse("Successfully followed user with ID: " + userId));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("User not found"));
+        }
+    }
 
+    @PostMapping("/unfollow/{userId}")
+    public ResponseEntity<?> unfollowUser(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("User must be authenticated to unfollow"));
+        }
+        Long followerUserId = userDetails.getId();
+        try {
+            followerService.unfollowUser(userId, followerUserId);
+            return ResponseEntity.ok(new MessageResponse("Successfully unfollowed user with ID: " + userId));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("User not found"));
+        }
+    }
+
+    @GetMapping("/followers")
+    public ResponseEntity<?> getFollowers(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("User must be authenticated to view followers"));
+        }
+
+        Long userId = userDetails.getId();
+        try {
+            List<Follower> followers = followerService.getFollowers(userId);
+            List<UserInfoResponse> followerDetails = followers.stream()
+                    .map(f -> {
+                        User user = f.getFollowerUser();
+                        return new UserInfoResponse(
+                                user.getUserId(),
+                                user.getUserName(),
+                                user.getEmail(),
+                                user.isAccountNonLocked(),
+                                user.isAccountNonExpired(),
+                                user.isCredentialsNonExpired(),
+                                user.isEnabled(),
+                                user.getCredentialsExpiryDate(),
+                                user.getAccountExpiryDate(),
+                                user.isTwoFactorEnabled(),
+                                List.of(user.getRole().getRoleName().name()),
+                                user.getBio(),
+                                user.getProfilePicture()
+                        );
+                    })
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(followerDetails);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("User not found"));
+        }
+    }
+
+    @GetMapping("/following")
+    public ResponseEntity<?> getFollowing(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("User must be authenticated to view following"));
+        }
+
+        Long userId = userDetails.getId();
+        try {
+            List<Follower> following = followerService.getFollowing(userId);
+            List<UserInfoResponse> followingDetails = following.stream()
+                    .map(f -> {
+                        User user = f.getUser();
+                        return new UserInfoResponse(
+                                user.getUserId(),
+                                user.getUserName(),
+                                user.getEmail(),
+                                user.isAccountNonLocked(),
+                                user.isAccountNonExpired(),
+                                user.isCredentialsNonExpired(),
+                                user.isEnabled(),
+                                user.getCredentialsExpiryDate(),
+                                user.getAccountExpiryDate(),
+                                user.isTwoFactorEnabled(),
+                                List.of(user.getRole().getRoleName().name()),
+                                user.getBio(),
+                                user.getProfilePicture()
+                        );
+                    })
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(followingDetails);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("User not found"));
+        }
+    }
+
+    @GetMapping("/profiles")
+    public ResponseEntity<?> getAllPublicProfiles(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("User must be authenticated to view profiles"));
+        }
+        Long authenticatedUserId = userDetails.getId();
+        List<UserDTO> profiles = userService.getAllPublicProfiles(authenticatedUserId);
+        return ResponseEntity.ok(profiles);
+    }
+
+    // Updated single profile endpoint: Removed /public/ and added authentication check
+    @GetMapping("/profile/{userId}")
+    public ResponseEntity<?> getPublicProfile(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("User must be authenticated to view profiles"));
+        }
+        try {
+            Long authenticatedUserId = userDetails.getId();
+            UserDTO profile = userService.getPublicProfile(userId, authenticatedUserId);
+            return ResponseEntity.ok(profile);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("User not found"));
+        }
+    }
 
 
 }
