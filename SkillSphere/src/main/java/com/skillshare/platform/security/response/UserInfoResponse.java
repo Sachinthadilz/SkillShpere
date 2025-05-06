@@ -1,4 +1,3 @@
-// UserInfoResponse.java
 package com.skillshare.platform.security.response;
 
 import lombok.Getter;
