@@ -48,7 +48,6 @@ const App = () => {
           }
         />
         <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
-
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />

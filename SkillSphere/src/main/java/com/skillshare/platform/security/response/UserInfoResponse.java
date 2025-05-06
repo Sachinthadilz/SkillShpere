@@ -23,6 +23,8 @@ public class UserInfoResponse {
     private List<String> roles;
     private String bio;
     private String profilePicture;
+    private boolean followed;
+
 
     public UserInfoResponse(Long id, String username, String email, boolean accountNonLocked, boolean accountNonExpired,
                             boolean credentialsNonExpired, boolean enabled, LocalDate credentialsExpiryDate,
