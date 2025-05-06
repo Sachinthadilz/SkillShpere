@@ -81,5 +81,56 @@ public class UserController {
         }
     }
 
-    
+    @GetMapping({"/following/{userId}"})
+    public ResponseEntity<?> getFollowing(
+            @PathVariable(required = false) Long userId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageResponse("User must be authenticated to view following"));
+        }
+
+        // Use provided userId or default to authenticated user's ID
+        Long targetUserId = userId != null ? userId : userDetails.getId();
+
+        try {
+            List<Follower> followingList = followerService.getFollowing(targetUserId); // Renamed variable
+            List<UserInfoResponse> followingDetails = followingList.stream()
+                    .map(f -> {
+                        User user = f.getUser();
+                        UserInfoResponse response = new UserInfoResponse(
+                                user.getUserId(),
+                                user.getUserName(),
+                                user.getEmail(),
+                                user.isAccountNonLocked(),
+                                user.isAccountNonExpired(),
+                                user.isCredentialsNonExpired(),
+                                user.isEnabled(),
+                                user.getCredentialsExpiryDate(),
+                                user.getAccountExpiryDate(),
+                                user.isTwoFactorEnabled(),
+                                List.of(user.getRole().getRoleName().name()),
+                                user.getBio(),
+                                user.getProfilePicture()
+                        );
+
+                        // Check if authenticated user follows this user
+                        User currentUser = userRepository.findById(userDetails.getId()).orElse(null);
+                        if (currentUser != null) {
+                            boolean isFollowed = followerService.getFollowing(userDetails.getId()).stream()
+                                    .anyMatch(following -> following.getUser().getUserId().equals(user.getUserId()));
+                            response.setFollowed(isFollowed);
+                        }
+
+                        return response;
+                    })
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(followingDetails);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("User not found"));
+        }
+    }
+
 }
