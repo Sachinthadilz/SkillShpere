@@ -1,12 +1,13 @@
-// FollowerServiceImpl.java
 package com.skillshare.platform.services.impl;
 
 import com.skillshare.platform.models.Follower;
+import com.skillshare.platform.models.Notification;
 import com.skillshare.platform.models.User;
 
 import com.skillshare.platform.repositories.FollowerRepository;
 import com.skillshare.platform.repositories.UserRepository;
 import com.skillshare.platform.services.FollowerService;
+import com.skillshare.platform.services.NotificationService;
 import com.skillshare.platform.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,9 @@ public class FollowerServiceImpl implements FollowerService {
 
     @Autowired
     private UserService userService; // Assuming this exists
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Override
     @Transactional
@@ -50,6 +54,9 @@ public class FollowerServiceImpl implements FollowerService {
         Follower follower = new Follower();
         follower.setUser(user);
         follower.setFollowerUser(followerUser);
+
+        String message = followerUser.getUserName() + " started following you";
+        notificationService.createNotification(user, followerUser, message, Notification.NotificationType.FOLLOW);
 
         return followerRepository.save(follower);
     }

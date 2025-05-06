@@ -1,16 +1,12 @@
-// MessageResponse.java
 package com.skillshare.platform.security.response;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Setter
-@Getter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class MessageResponse {
     private String message;
-
-    public MessageResponse(String message) {
-        this.message = message;
-    }
-
 }

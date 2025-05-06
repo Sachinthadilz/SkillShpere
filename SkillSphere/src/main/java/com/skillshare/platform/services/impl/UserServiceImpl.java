@@ -6,6 +6,7 @@ import com.skillshare.platform.repositories.FollowerRepository;
 import com.skillshare.platform.repositories.PasswordResetTokenRepository;
 import com.skillshare.platform.repositories.RoleRepository;
 import com.skillshare.platform.repositories.UserRepository;
+import com.skillshare.platform.services.CloudinaryService;
 import com.skillshare.platform.services.TotpService;
 import com.skillshare.platform.services.UserService;
 import com.skillshare.platform.models.AppRole;
@@ -17,7 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -51,6 +54,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     TotpService totpService;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     @Override
     public void updateUserRole(Long userId, String roleName) {
@@ -235,7 +241,6 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-
     @Override
     public UserDTO getPublicProfile(Long userId, Long authenticatedUserId) {
         User user = userRepository.findById(userId)
@@ -245,6 +250,8 @@ public class UserServiceImpl implements UserService {
         dto.setUserId(user.getUserId());
         dto.setUserName(user.getUserName());
         dto.setBio(user.getBio());
+        dto.setRole(user.getRole());
+        dto.setProfilePicture(user.getProfilePicture());
         // Leave other fields null or default to exclude them from public view
 
         if (authenticatedUserId != null) {
@@ -263,11 +270,15 @@ public class UserServiceImpl implements UserService {
     public List<UserDTO> getAllPublicProfiles(Long authenticatedUserId) {
         List<User> users = userRepository.findAll();
         return users.stream()
+                .filter(user -> !user.getUserId().equals(authenticatedUserId)) // Exclude authenticated user
+                .filter(user -> !user.getRole().getRoleName().name().equalsIgnoreCase("ROLE_ADMIN"))
                 .map(user -> {
                     UserDTO dto = new UserDTO();
                     dto.setUserId(user.getUserId());
                     dto.setUserName(user.getUserName());
                     dto.setBio(user.getBio());
+                    dto.setRole(user.getRole());
+                    dto.setProfilePicture(user.getProfilePicture());
                     // Leave other fields null or default for public view
 
                     if (authenticatedUserId != null) {
@@ -278,12 +289,27 @@ public class UserServiceImpl implements UserService {
                     } else {
                         dto.setFollowed(false);
                     }
-
                     return dto;
                 })
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public void updateProfileInfo(Long userId, String bio, MultipartFile profilePicture) throws IOException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // Update bio if provided
+        if (bio != null) {
+            user.setBio(bio);
+        }
 
+        // Update profile picture if provided
+        if (profilePicture != null && !profilePicture.isEmpty()) {
+            String imageUrl = cloudinaryService.uploadImage(profilePicture);
+            user.setProfilePicture(imageUrl);
+        }
+
+        userRepository.save(user);
+    }
 }

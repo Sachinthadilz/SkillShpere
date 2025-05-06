@@ -1,5 +1,4 @@
 package com.skillshare.platform.config;
-
 import com.skillshare.platform.models.AppRole;
 import com.skillshare.platform.models.Role;
 import com.skillshare.platform.models.User;
@@ -21,7 +20,6 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
-
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
