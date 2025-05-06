@@ -7,6 +7,7 @@ import AboutUs from "./components/AboutUs/AboutUs";
 import Landing from "./components/LandingPage/LandingPage";
 import Signup from "./components/Auth/SignUp";
 import Login from "./components/Auth/Login";
+import NotFound from "./components/NotFound";
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
         <Route path="/about" element={<AboutUs />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />
     </Router>
