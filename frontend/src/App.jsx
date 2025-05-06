@@ -10,6 +10,7 @@ import Login from "./components/Auth/Login";
 import OAuth2RedirectHandler from "./components/Auth/OAuth2RedirectHandler";
 import UserProfile from "./components/Auth/UserDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Admin from "./components/Admin/Admin";
 import AccessDenied from "./components/Auth/AccessDenied";
 import NotFound from "./components/NotFound";
 import ForgotPassword from "./components/Auth/ForgotPassword";
@@ -28,6 +29,14 @@ const App = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/access-denied" element={<AccessDenied />} />
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute adminPage={true}>
+              <Admin />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/profile"
           element={
