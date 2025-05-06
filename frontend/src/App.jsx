@@ -17,6 +17,8 @@ import ForgotPassword from "./components/Auth/ForgotPassword";
 import ResetPassword from "./components/Auth/ResetPassword";
 import Explore from "./components/Explore/Explore";
 import PublicUserProfile from "./components/Explore/PublicUserProfile";
+import FollowersList from "./components/Explore/FollowersList";
+import FollowingList from "./components/Explore/FollowingList";
 
 const App = () => {
   return (
@@ -33,6 +35,8 @@ const App = () => {
         <Route path="/access-denied" element={<AccessDenied />} />
         <Route path="/explore" element={<Explore />} />
         <Route path="/profile/:userId" element={<PublicUserProfile />} />
+        <Route path="/followers" element={<FollowersList />} />
+        <Route path="/following" element={<FollowingList />} />
         <Route
           path="/admin/*"
           element={
