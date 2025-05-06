@@ -241,7 +241,6 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-
     @Override
     public UserDTO getPublicProfile(Long userId, Long authenticatedUserId) {
         User user = userRepository.findById(userId)
@@ -313,7 +312,4 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
     }
-
-
-
 }

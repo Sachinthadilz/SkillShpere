@@ -1,4 +1,3 @@
-// FollowerServiceImpl.java
 package com.skillshare.platform.services.impl;
 
 import com.skillshare.platform.models.Follower;
