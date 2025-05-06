@@ -15,6 +15,8 @@ import AccessDenied from "./components/Auth/AccessDenied";
 import NotFound from "./components/NotFound";
 import ForgotPassword from "./components/Auth/ForgotPassword";
 import ResetPassword from "./components/Auth/ResetPassword";
+import Explore from "./components/Explore/Explore";
+import PublicUserProfile from "./components/Explore/PublicUserProfile";
 
 const App = () => {
   return (
@@ -29,6 +31,8 @@ const App = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/access-denied" element={<AccessDenied />} />
+        <Route path="/explore" element={<Explore />} />
+        <Route path="/profile/:userId" element={<PublicUserProfile />} />
         <Route
           path="/admin/*"
           element={
