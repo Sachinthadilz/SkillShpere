@@ -1,5 +1,4 @@
 package com.skillshare.platform.controllers;
-
 import com.skillshare.platform.dtos.UserDTO;
 import com.skillshare.platform.models.Role;
 import com.skillshare.platform.models.User;

@@ -1,5 +1,4 @@
 package com.skillshare.platform.controllers;
-
 import com.skillshare.platform.dtos.UserDTO;
 import com.skillshare.platform.models.*;
 import com.skillshare.platform.repositories.RoleRepository;
@@ -30,8 +29,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.HashMap;
