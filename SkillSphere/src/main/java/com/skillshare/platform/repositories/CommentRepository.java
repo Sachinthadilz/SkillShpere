@@ -1,4 +1,4 @@
-package com.skillshare.platform.repositorys;
+package com.skillshare.platform.repositories;
 
 import com.skillshare.platform.models.Comment;
 import org.springframework.data.mongodb.repository.MongoRepository;
