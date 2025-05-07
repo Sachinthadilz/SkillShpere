@@ -2,15 +2,25 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import PublicUserFollowers from "./PublicUserFollowers ";
+import PublicUserFollowing from "./PublicUserFollowing";
 
 const PublicUserProfile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [showFollowers, setShowFollowers] = useState(false);
+  const [showFollowing, setShowFollowing] = useState(false);
 
   useEffect(() => {
     fetchUserProfile();
+    if (userId) {
+      fetchFollowerCount();
+      fetchFollowingCount();
+    }
   }, [userId]);
 
   const fetchUserProfile = async () => {
@@ -24,6 +34,31 @@ const PublicUserProfile = () => {
       navigate("/discover"); // Redirect back to user list on error
     } finally {
       setLoading(false);
+    }
+  };
+
+  const closeModals = () => {
+    setShowFollowers(false);
+    setShowFollowing(false);
+  };
+
+  const fetchFollowerCount = async () => {
+    try {
+      const response = await api.get(`/auth/user/followers/${userId}`);
+      setFollowerCount(response.data.length);
+    } catch (error) {
+      console.error("Error fetching followers count:", error);
+      setFollowerCount(0);
+    }
+  };
+
+  const fetchFollowingCount = async () => {
+    try {
+      const response = await api.get(`/auth/user/following/${userId}`);
+      setFollowingCount(response.data.length);
+    } catch (error) {
+      console.error("Error fetching following count:", error);
+      setFollowingCount(0);
     }
   };
 
@@ -44,6 +79,9 @@ const PublicUserProfile = () => {
         ...profile,
         followed: !profile.followed,
       });
+
+      // Refresh follower count after follow/unfollow action
+      fetchFollowerCount();
     } catch (error) {
       console.error("Error toggling follow status:", error);
       toast.error(profile.followed ? "Failed to unfollow" : "Failed to follow");
@@ -101,6 +139,41 @@ const PublicUserProfile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8">
+      {/* Show followers modal when clicked */}
+      {showFollowers && (
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center"
+          onClick={closeModals}
+        >
+          <div
+            className="relative w-full max-w-4xl mx-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <PublicUserFollowers
+              userId={userId}
+              onClose={() => setShowFollowers(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Show following modal when clicked */}
+      {showFollowing && (
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center"
+          onClick={closeModals}
+        >
+          <div
+            className="relative w-full max-w-4xl mx-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <PublicUserFollowing
+              userId={userId}
+              onClose={() => setShowFollowing(false)}
+            />
+          </div>
+        </div>
+      )}
       <div className="max-w-4xl mx-auto">
         <div className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
           {/* Profile header with cover image */}
@@ -132,10 +205,10 @@ const PublicUserProfile = () => {
                         }
                         alt={`${profile.userName}'s profile`}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "https://via.placeholder.com/150";
-                        }}
+                        // onError={e => {
+                        //   e.target.onerror = null;
+                        //   e.target.src = 'https://via.placeholder.com/150';
+                        // }}
                       />
                     </div>
 
@@ -160,50 +233,87 @@ const PublicUserProfile = () => {
                       </div>
                     </div>
 
-                    <button
-                      onClick={handleFollowToggle}
-                      className={`mt-6 sm:mt-0 px-6 py-2.5 rounded-full font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                        profile.followed
-                          ? "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 focus:ring-gray-500"
-                          : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 focus:ring-indigo-500"
-                      }`}
-                    >
-                      {profile.followed ? (
-                        <span className="flex items-center">
-                          <svg
-                            className="w-4 h-4 mr-2"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            ></path>
-                          </svg>
-                          Following
-                        </span>
-                      ) : (
-                        <span className="flex items-center">
-                          <svg
-                            className="w-4 h-4 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                            ></path>
-                          </svg>
-                          Follow
-                        </span>
-                      )}
-                    </button>
+                    <div className="mt-6 sm:mt-0 flex items-center gap-4">
+                      {/* Enhanced Follower and Following counts */}
+                      <div className="flex gap-6 mr-4">
+                        <div
+                          className="text-center group relative cursor-pointer"
+                          onClick={() => setShowFollowers(true)}
+                        >
+                          <div className="flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-700/60 rounded-lg px-4 py-2 transition-all duration-300 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 border border-transparent group-hover:border-indigo-200 dark:group-hover:border-indigo-800">
+                            <div className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                              {followerCount}
+                            </div>
+                            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                              Followers
+                            </div>
+                          </div>
+                          <div className="hidden group-hover:block absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full"></div>
+                        </div>
+
+                        <div
+                          className="text-center group relative cursor-pointer"
+                          onClick={() => setShowFollowing(true)}
+                        >
+                          <div className="flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-700/60 rounded-lg px-4 py-2 transition-all duration-300 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 border border-transparent group-hover:border-indigo-200 dark:group-hover:border-indigo-800">
+                            <div className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                              {followingCount}
+                            </div>
+                            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                              Following
+                            </div>
+                          </div>
+                          <div className="hidden group-hover:block absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full"></div>
+                        </div>
+                      </div>
+
+                      {/* Follow/Unfollow button - keep existing code */}
+                      <button
+                        onClick={handleFollowToggle}
+                        className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                          profile.followed
+                            ? "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 focus:ring-gray-500"
+                            : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 focus:ring-indigo-500"
+                        }`}
+                      >
+                        {/* existing button content */}
+                        {profile.followed ? (
+                          <span className="flex items-center">
+                            <svg
+                              className="w-4 h-4 mr-2"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              ></path>
+                            </svg>
+                            Following
+                          </span>
+                        ) : (
+                          <span className="flex items-center">
+                            <svg
+                              className="w-4 h-4 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                              ></path>
+                            </svg>
+                            Follow
+                          </span>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
