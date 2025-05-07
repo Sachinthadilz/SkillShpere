@@ -1,6 +1,6 @@
-package com.example.skillshare.repository;
+package com.skillshare.platform.repositories;
 
-import com.example.skillshare.model.Like;
+import com.skillshare.models.Like;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
