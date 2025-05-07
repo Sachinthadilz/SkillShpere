@@ -1,7 +1,7 @@
-package com.example.skillshare.controller;
+package com.skillshare.platform.controllers;
 
-import com.example.skillshare.model.Comment;
-import com.example.skillshare.repository.CommentRepository;
+import com.skillshare.platform.models.Comment;
+import com.skillshare.platform.repositorys.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

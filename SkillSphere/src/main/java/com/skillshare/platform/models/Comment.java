@@ -1,4 +1,4 @@
-package com.example.skillshare.model;
+package com.skillshare.platform.models;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;

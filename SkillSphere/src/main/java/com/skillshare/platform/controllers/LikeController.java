@@ -1,7 +1,7 @@
-package com.example.skillshare.controller;
+package com.skillshare.platform.controllers;
 
-import com.example.skillshare.model.Like;
-import com.example.skillshare.repository.LikeRepository;
+import com.skillshare.platform.models.Like;
+import com.skillshare.platform.repositorys.LikeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
