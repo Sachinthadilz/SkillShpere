@@ -32,8 +32,5 @@ public class LikeController {
         return "Post unliked!";
     }
 
-    @GetMapping("/count/{postId}")
-    public long countLikes(@PathVariable String postId) {
-        return likeRepository.findByPostId(postId).size();
-    }
+    
 }
