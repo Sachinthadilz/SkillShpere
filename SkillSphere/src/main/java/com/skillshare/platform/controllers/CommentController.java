@@ -32,5 +32,8 @@ public class CommentController {
         return commentRepository.save(comment);
     }
 
-    
+    @DeleteMapping("/{id}")
+    public void deleteComment(@PathVariable String id) {
+        commentRepository.deleteById(id);
+    }
 }
